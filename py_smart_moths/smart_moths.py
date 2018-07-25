@@ -4,17 +4,18 @@ import numpy as np
 
 
 class Moth:
-    def __init__(self, canvas_dims, target_location, flight_path_size=300, size=3):
-        self.canvas_dims = canvas_dims
+    def __init__(self, course_dims, target_location, obstacles=[], flight_path_size=300, size=3):
+        self.course_dims = course_dims
         self.flight_path_size = flight_path_size
         self.size = size
-        self.start_location = np.array([self.canvas_dims[0] / 2, int(self.canvas_dims[1] * 0.9)], dtype='int')
+        self.start_location = np.array([self.course_dims[0] / 2, int(self.course_dims[1] * 0.9)], dtype='int')
         self.location = self.start_location.copy()
         self.velocity = np.array([0, -1], dtype='int')
         self.flight_path = self._random_flight_path()
         self.step = 0
         self.fitness = 0.5
         self.target_location = target_location
+        self.obstacles = obstacles
         self.color = (150, 150, 150)
         self.succeeded = 0
 
@@ -33,11 +34,22 @@ class Moth:
 
     def _is_offscreen(self):
         return (self.location[0] < 0 or self.location[1] < 0 or
-                self.location[0] > self.canvas_dims[0] or
-                self.location[1] > self.canvas_dims[1])
+                self.location[0] > self.course_dims[0] or
+                self.location[1] > self.course_dims[1])
+
+    def _hit_obstacle(self):
+        hit_obstacle = False
+        if self.obstacles:
+            for obstacle in self.obstacles:
+                hit_obstacle = (obstacle[0][0] <= self.location[0] <= obstacle[1][0] and
+                                obstacle[0][1] <= self.location[1] <= obstacle[1][1])
+                if hit_obstacle:
+                    break
+
+        return hit_obstacle
 
     def update(self):
-        if not self._is_offscreen():
+        if not self._is_offscreen() and not self._hit_obstacle():
             if self._e_dist(self.location, self.target_location) <= 19:
                 self.location = self.target_location
                 self.color = (17, 102, 1)
@@ -47,8 +59,8 @@ class Moth:
                 self.location += self.velocity
         self.step += 1
 
-    def show(self, canvas):
-        cv2.circle(canvas, tuple(self.location), self.size, self.color, -1)
+    def show(self, course):
+        cv2.circle(course, tuple(self.location), self.size, self.color, -1)
 
     @staticmethod
     def _e_dist(xy1, xy2):
@@ -56,49 +68,78 @@ class Moth:
         return sq_dist**0.5
 
     def evaluate_fitness(self):
-        max_dist = self._e_dist((0, 0), self.canvas_dims)
+        max_dist = self._e_dist((0, 0), self.course_dims)
         dist = self._e_dist(self.location, self.target_location)
         fitness_change = np.interp(dist, [0, max_dist], [2, 0.5])
 
         self.fitness *= fitness_change
 
 
-class Population:
-    def __init__(self, target, n_moths=50, n_generations=10, mate_rate=0.25, mutate_rate=0.05,
-                 n_frames=500, canvas_dims=(400, 400)):
-        self.target = target
+class SmartMoths:
+    def __init__(self, n_moths=50, n_obstacles=1, n_generations=10, mate_rate=0.25, mutate_rate=0.05,
+                 n_frames=500, course_dims=(400, 600)):
+        self.target = (np.random.randint(5, course_dims[0] - 5),
+                       np.random.randint(5, 30))
         self.n_moths = n_moths
+        self.n_obstacles = n_obstacles
         self.n_generations = n_generations
         self.mate_rate = mate_rate
         self.mutate_rate = mutate_rate
         self.n_frames = n_frames
-        self.canvas_dims = canvas_dims
+        self.course_dims = course_dims
 
-        self.canvas = np.zeros(canvas_dims[::-1] + (3,), dtype='uint8')
-        cv2.circle(self.canvas, target, 20, (255, 255, 255), -1)
-        self.moths = [Moth(canvas_dims, target, n_frames) for _ in range(n_moths)]
+        self.obstacles = self._gen_obstacles()
+        self.course = self._create_course()
+        self.moths = [Moth(course_dims, self.target, self.obstacles, n_frames) for _ in range(n_moths)]
         self.generation_i = 0
+
+    def _create_course(self):
+        course = np.zeros(self.course_dims[::-1] + (3,), dtype='uint8')
+        self._draw_obstacles(course)
+        self._draw_target(course)
+
+        return course
+
+    def _draw_target(self, course):
+        cv2.circle(course, self.target, 20, (255, 255, 255), -1)
+
+    def _draw_obstacles(self, course):
+        for obstacle in self.obstacles:
+            cv2.rectangle(course, obstacle[0], obstacle[1], (0, 0, 142), -1)
+
+    def _gen_obstacles(self):
+        x_range = (30, self.course_dims[0] * .75)
+        y_range = (30, self.course_dims[1] * .75)
+        w_range = (50, 100)
+        h_range = (50, 100)
+
+        obstacles = []
+        for _ in range(self.n_obstacles):
+            x, y, w, h = (np.random.randint(*r) for r in [x_range, y_range, w_range, h_range])
+            obstacles.append([(x, y), ((x + w), (y + h))])
+        return obstacles
 
     def _run_generation(self):
         for frame in range(self.n_frames):
-            canvas_clone = self.canvas.copy()
-            cv2.putText(canvas_clone,
+            course_clone = self.course.copy()
+            cv2.putText(course_clone,
                         'Generation {}'.format(self.generation_i),
                         (10, 20), cv2.FONT_HERSHEY_SIMPLEX, .5, (200, 200, 200), 2)
-            cv2.putText(canvas_clone,
+            cv2.putText(course_clone,
                         'Success Rate: {}%'.format(self.success_rate()),
                         (10, 40), cv2.FONT_HERSHEY_SIMPLEX, .5, (200, 200, 200), 2)
 
             for moth in self.moths:
                 moth.update()
-                moth.show(canvas_clone)
+                moth.show(course_clone)
 
-            if self.success_rate() == 100:
+            if (frame == self.n_frames - 1 and
+                    (self.success_rate() == 100 or self.generation_i == self.n_generations - 1)):
                 wait_key = 0
             else:
                 wait_key = 1
 
-            cv2.imshow('Smart Moths (Esc to Quit)', canvas_clone)
+            cv2.imshow('Smart Moths (Esc to Quit)', course_clone)
             key = cv2.waitKey(wait_key)
 
             if key == 27:
@@ -148,17 +189,10 @@ class Population:
 
 
 if __name__ == '__main__':
-    width = 400
-    height = 600
-    # target_loc = (width // 2, 0)
-    target_loc = (np.random.randint(20, width - 20),
-                  np.random.randint(20, height - 200))
-
-    smart_moths = Population(target=target_loc,
-                             n_moths=100,
-                             n_generations=20,
+    smart_moths = SmartMoths(n_obstacles=4,
+                             n_moths=200,
+                             n_generations=30,
                              mate_rate=0.25,
-                             n_frames=500,
-                             canvas_dims=(width, height))
+                             n_frames=600)
 
     smart_moths.find_light()
