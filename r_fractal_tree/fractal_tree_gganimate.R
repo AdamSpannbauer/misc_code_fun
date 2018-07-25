@@ -34,6 +34,7 @@ branch = function(xy, angle_in, delta_angle, len) {
   rownames(branch_df) = NULL
   names(branch_df) = c('x', 'y')
   branch_df$id = uuid::UUIDgenerate()
+  branch_df$branch = NA
   
   return(list(df=branch_df, end_point=end_point))
 }
@@ -61,6 +62,7 @@ create_branches = function(xy,
                                       min_len = min_len,
                                       len_decay = len_decay)
     branches_left = collect_branches(branch_left, subranches_left)
+    branches_left$df$branch = 'left'
     
     branch_right = branch(xy, angle_in, -delta_angle, len)
     subranches_right = create_branches(branch_right$end_point,
@@ -70,6 +72,7 @@ create_branches = function(xy,
                                        min_len = min_len,
                                        len_decay = len_decay)
     branches_right = collect_branches(branch_right, subranches_right)
+    branches_right$df$branch = 'right'
     
     return(collect_branches(branches_left, branches_right))
   }
@@ -81,6 +84,7 @@ create_fractal_tree_df = function(trunk_len=10,
                                   len_decay=0.7,
                                   min_len=0.25) {
   trunk = create_trunk(trunk_len)
+  trunk$df$branch = 'trunk'
   branches = create_branches(trunk$end_point,
                              delta_angle = delta_angle,
                              len = trunk_len * len_decay,
@@ -123,11 +127,19 @@ animate_fractal_tree = function(trunk_len=10,
                                   len_decay,
                                   min_len)
   
+  # create color columns based on branch side and angle
+  trees$branch_color[trees$branch == 'trunk'] = '#000000'
+  trees$branch_color[trees$branch == 'left'] = '#000000'
+  trees$branch_color[trees$branch == 'right'] = '#adadad'
+  angle_colors = data.frame(angle = sort(unique(trees$angle)))
+  angle_colors$angle_color = rainbow(nrow(angle_colors))
+  trees = merge(trees, angle_colors, all.x=TRUE, by='angle')
+  
   ggplot(trees, aes(x, y, group=id)) +
-    geom_line() +
-    geom_point(size=.2, aes(color=angle)) +
-    scale_color_gradientn(colours = rainbow(5)) +
-    guides(color=FALSE) +
+    geom_line(aes(color=branch_color)) +
+    geom_point(size=.2, aes(color=angle_color)) +
+    scale_color_identity() +
+    guides(color=FALSE, linetype=FALSE) +
     theme_void() +
     transition_manual(frame)
 }
@@ -136,4 +148,5 @@ animate_fractal_tree = function(trunk_len=10,
 animate_fractal_tree(trunk_len=10,
                      angle_seq=seq(0, 2 * pi - pi / 32, pi/32),
                      len_decay=0.7,
-                     min_len=.25)
+                     min_len=0.25)
+anim_save('~/Desktop/fractal_tree_diff_color_branch_side.gif')
