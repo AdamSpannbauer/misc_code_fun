@@ -1,6 +1,6 @@
 ## Miscellaneous Fun with Code
 
-Disclaimer: these are just one off projects for fun.  They're might not optimized, readable, original, etc.  Some might include re-implementing something that someone already wrote better   ¯\\\_(ツ)\_/¯
+Disclaimer: these are just one off projects for fun.  They might not optimized, readable, original, etc.  Some might include re-implementing something that someone already wrote better   ¯\\\_(ツ)\_/¯
 
 ### Subprojects:
 
