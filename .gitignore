@@ -38,6 +38,9 @@ vignettes/*.pdf
 
 
 ##Python
+#pycharm
+.idea/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
