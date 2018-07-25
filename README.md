@@ -11,6 +11,5 @@
 #### [r\_barnsley\_fern (R)](r_barnsley_fern)
 
 <p align='center'>
-  <img src='r_barnsley_fern/fern_compare.gif
-' width=70%>
+  <img src='r_barnsley_fern/fern_compare.gif' width=70%>
 </p>
