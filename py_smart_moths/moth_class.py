@@ -17,6 +17,7 @@ class Moth:
         self.obstacles = obstacles
         self.color = (150, 150, 150)
         self.succeeded = 0
+        self.success_speed = lifespan
 
     def reset(self):
         self.location = self.start_location.copy()
@@ -53,17 +54,22 @@ class Moth:
                 self.location = self.target_location
                 self.color = (17, 102, 1)
                 self.succeeded = 1
+                self.success_speed = self.step
             else:
                 self.velocity = self.flight_path[self.step]
                 self.location += self.velocity
         self.step += 1
 
-    def show(self, course):
+    def show(self, course, victory_lap=False):
+        if victory_lap:
+            color = (int(x) for x in np.random.randint(0, 266, 3))
+        else:
+            color = self.color
         wing_l = (self.location[0] - 3, self.location[1] - 2)
         wind_r = (self.location[0] + 3, self.location[1] - 2)
         cv2.circle(course, wing_l, self.size, (0, 0, 0), 1)
         cv2.circle(course, wind_r, self.size, (0, 0, 0), 1)
-        cv2.circle(course, tuple(self.location), self.size, self.color, -1)
+        cv2.circle(course, tuple(self.location), self.size, tuple(color), -1)
 
     @staticmethod
     def _e_dist(xy1, xy2):
@@ -73,6 +79,8 @@ class Moth:
     def evaluate_fitness(self):
         max_dist = self._e_dist((0, 0), self.course_dims)
         dist = self._e_dist(self.location, self.target_location)
-        fitness_change = np.interp(dist, [0, max_dist], [2, 0.5])
+        worst_case = max_dist * self.lifespan
+        fitness = self.success_speed * dist
+        fitness_change = np.interp(fitness, [0, worst_case], [2, 0.5])
 
         self.fitness *= fitness_change

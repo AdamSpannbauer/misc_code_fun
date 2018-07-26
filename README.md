@@ -24,11 +24,11 @@ Homegrown genetic algorithm for 'moths' to learn how to reach a target through a
 ##### Example learning
 
 <p align='center'>
-  <img src='py_smart_moths/gen_0.gif' width=35%>
+  <img src='py_smart_moths/gen_1.gif' width=35%>
   <img src='py_smart_moths/gen_9.gif' width=35%>
 </p>
 
 <p align='center'>
-  <img src='py_smart_moths/gen_29.gif' width=35%>
-  <img src='py_smart_moths/gen_70.gif' width=35%>
+  <img src='py_smart_moths/gen_18.gif' width=35%>
+  <img src='py_smart_moths/victory_lap.gif' width=35%>
 </p>

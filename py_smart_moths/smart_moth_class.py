@@ -21,6 +21,7 @@ class SmartMoths:
         self.course = self._create_course()
         self.moths = [Moth(course_dims, self.target, self.obstacles, lifespan) for _ in range(n_moths)]
         self.generation_i = 0
+        self.victory_lap_i = -1
 
     def _create_course(self):
         course = np.zeros(self.course_dims[::-1] + (3,), dtype='uint8') + 50
@@ -64,13 +65,17 @@ class SmartMoths:
 
             for moth in self.moths:
                 moth.update()
-                moth.show(course_clone)
+                is_victory_lap = (self.victory_lap_i - 1) == self.generation_i
+                moth.show(course_clone, victory_lap=is_victory_lap)
 
             cv2.imshow('Smart Moths (Esc to Quit)', course_clone)
             key = cv2.waitKey(1)
 
-            if key == 27 or self.success_rate() == 100:
+            if key == 27 or self.victory_lap_i == self.generation_i:
                 return 'stop early'
+
+            if self.victory_lap_i == -1 and self.success_rate() == 100:
+                self.victory_lap_i = self.generation_i + 2
 
         for moth in self.moths:
             moth.evaluate_fitness()
