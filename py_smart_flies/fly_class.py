@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-class Moth:
+class Fly:
     def __init__(self, course_dims, target_location, obstacles=[], lifespan=300, size=3):
         self.course_dims = course_dims
         self.lifespan = lifespan

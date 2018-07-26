@@ -1,15 +1,15 @@
 import random
 import cv2
 import numpy as np
-from moth_class import Moth
+from fly_class import Fly
 
 
-class SmartMoths:
-    def __init__(self, n_moths=50, n_obstacles=1, n_generations=10, mate_rate=0.25, mutate_rate=0.05,
+class SmartFlies:
+    def __init__(self, n_flies=50, n_obstacles=1, n_generations=10, mate_rate=0.25, mutate_rate=0.05,
                  lifespan=500, course_dims=(400, 600)):
         self.target = (np.random.randint(5, course_dims[0] - 5),
                        np.random.randint(5, 30))
-        self.n_moths = n_moths
+        self.n_flies = n_flies
         self.n_obstacles = n_obstacles
         self.n_generations = n_generations
         self.mate_rate = mate_rate
@@ -19,7 +19,7 @@ class SmartMoths:
 
         self.obstacles = self._gen_obstacles()
         self.course = self._create_course()
-        self.moths = [Moth(course_dims, self.target, self.obstacles, lifespan) for _ in range(n_moths)]
+        self.flies = [Fly(course_dims, self.target, self.obstacles, lifespan) for _ in range(n_flies)]
         self.generation_i = 0
         self.victory_lap_i = -1
 
@@ -63,12 +63,12 @@ class SmartMoths:
                         'Success Rate: {}%'.format(self.success_rate()),
                         (10, self.course_dims[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
 
-            for moth in self.moths:
-                moth.update()
+            for fly in self.flies:
+                fly.update()
                 is_victory_lap = (self.victory_lap_i - 1) == self.generation_i
-                moth.show(course_clone, victory_lap=is_victory_lap)
+                fly.show(course_clone, victory_lap=is_victory_lap)
 
-            cv2.imshow('Smart Moths (Esc to Quit)', course_clone)
+            cv2.imshow('Smart Flies (Esc to Quit)', course_clone)
             key = cv2.waitKey(1)
 
             if key == 27 or self.victory_lap_i == self.generation_i:
@@ -77,8 +77,8 @@ class SmartMoths:
             if self.victory_lap_i == -1 and self.success_rate() == 100:
                 self.victory_lap_i = self.generation_i + 2
 
-        for moth in self.moths:
-            moth.evaluate_fitness()
+        for fly in self.flies:
+            fly.evaluate_fitness()
 
         self.generation_i += 1
 
@@ -95,19 +95,19 @@ class SmartMoths:
         return v
 
     def _mate(self):
-        n = int(self.n_moths * self.mate_rate)
-        fitnesses = [moth.fitness for moth in self.moths]
-        top_n_moth_inds = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i])[-n:]
+        n = int(self.n_flies * self.mate_rate)
+        fitnesses = [fly.fitness for fly in self.flies]
+        top_n_fly_inds = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i])[-n:]
 
-        for moth in self.moths:
-            if not moth.succeeded:
+        for fly in self.flies:
+            if not fly.succeeded:
                 for i in range(self.lifespan):
-                    parent = self.moths[random.choice(top_n_moth_inds)]
+                    parent = self.flies[random.choice(top_n_fly_inds)]
                     new_x = self._mutation(parent.flight_path[i][0])
                     new_y = self._mutation(parent.flight_path[i][1])
 
-                    moth.flight_path[i] = np.array([new_x, new_y], dtype='int')
-            moth.reset()
+                    fly.flight_path[i] = np.array([new_x, new_y], dtype='int')
+            fly.reset()
 
     def find_light(self):
         for gen_i in range(self.n_generations):
@@ -117,4 +117,4 @@ class SmartMoths:
             self._mate()
 
     def success_rate(self):
-        return 100 * sum(moth.succeeded for moth in self.moths) // self.n_moths
+        return 100 * sum(fly.succeeded for fly in self.flies) // self.n_flies
