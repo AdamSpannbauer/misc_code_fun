@@ -59,6 +59,10 @@ class Moth:
         self.step += 1
 
     def show(self, course):
+        wing_l = (self.location[0] - 3, self.location[1] - 2)
+        wind_r = (self.location[0] + 3, self.location[1] - 2)
+        cv2.circle(course, wing_l, self.size, (0, 0, 0), 1)
+        cv2.circle(course, wind_r, self.size, (0, 0, 0), 1)
         cv2.circle(course, tuple(self.location), self.size, self.color, -1)
 
     @staticmethod

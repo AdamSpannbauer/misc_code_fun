@@ -23,7 +23,7 @@ class SmartMoths:
         self.generation_i = 0
 
     def _create_course(self):
-        course = np.zeros(self.course_dims[::-1] + (3,), dtype='uint8')
+        course = np.zeros(self.course_dims[::-1] + (3,), dtype='uint8') + 50
         self._draw_obstacles(course)
         self._draw_target(course)
 
