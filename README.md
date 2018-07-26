@@ -24,11 +24,5 @@ Homegrown genetic algorithm for 'flies' to learn how to reach a target through a
 ##### Example learning
 
 <p align='center'>
-  <img src='py_smart_flies/gen_1.gif' width=35%>
-  <img src='py_smart_flies/gen_9.gif' width=35%>
-</p>
-
-<p align='center'>
-  <img src='py_smart_flies/gen_18.gif' width=35%>
-  <img src='py_smart_flies/victory_lap.gif' width=35%>
+  <img src='py_smart_flies/full_example.gif' width=80%>
 </p>
