@@ -26,3 +26,11 @@ Homegrown genetic algorithm for 'flies' to learn how to reach a target through a
 <p align='center'>
   <img src='py_smart_flies/output/full_example.gif' width=80%>
 </p>
+
+#### [py\_spirograph (python)](py_spirograph)
+
+Create a random spirograph animation/drawing.
+
+<p align='center'>
+  <img src='py_spirograph/output/spirograph.gif' width=80%>
+</p>
