@@ -3,7 +3,7 @@ import cv2
 
 
 class Particle:
-    def __init__(self, location, target, radius=4, color=(255, 255, 255), max_speed=20):
+    def __init__(self, location, target, radius=4, color=(255, 255, 255), max_speed=75):
         self.target = np.array(target)
         self.location = np.array(location, dtype='float64')
         self.speed = np.array([0, 0], dtype='float64')

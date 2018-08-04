@@ -48,8 +48,8 @@ def create_particles(contour_points, contour_colors, canvas, rand_location=True,
         for point in points:
             location = target = tuple(point.flatten())
             if rand_location:
-                location = tuple(np.random.randint(1, canvas.shape[0], 1)) + \
-                           tuple(np.random.randint(1, canvas.shape[1], 1))
+                location = tuple(np.random.randint(1, canvas.shape[1], 1)) + \
+                           tuple(np.random.randint(1, canvas.shape[0], 1))
             particle = Particle(location, target, radius, color)
             particles.append(particle)
 
@@ -68,7 +68,7 @@ def get_mouse_xy(event, x, y, flags, param):
         mouse_y = y
 
 
-def steer_image(image, window_name = 'Particles (press ESC or Q to quit)'):
+def steer_image(image, window_name = 'Particles (press R to randomize; ESC or Q to quit)'):
     canvas = np.zeros(image.shape, dtype='uint8') + 50
 
     particles = image_to_particles(image)
@@ -87,3 +87,8 @@ def steer_image(image, window_name = 'Particles (press ESC or Q to quit)'):
 
         if key == 27 or key == ord('q'):
             break
+
+        if key == ord('r'):
+            for particle in particles:
+                particle.location = tuple(np.random.randint(1, canvas.shape[1], 1)) + \
+                                    tuple(np.random.randint(1, canvas.shape[0], 1))
