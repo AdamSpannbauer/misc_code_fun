@@ -3,11 +3,15 @@ import numpy as np
 from particle_class import Particle
 
 
-def image_to_particles(image, every_n=20, radius=4):
+def image_to_particles(image, canvas, every_n=20, radius=4, thresh_args=()):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, threshed = cv2.threshold(gray, 3, 255, 0)
+    if not thresh_args:
+        thresh_args = (5, 255, 0)
+    _, threshed = cv2.threshold(gray, *thresh_args)
 
     _, contours, _ = cv2.findContours(threshed, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    canvas_area = canvas.shape[0] * canvas.shape[1]
+    contours = [c for c in contours if cv2.contourArea(c) < .95 * canvas_area]
     contour_colors = [get_contour_color(c, image) for c in contours]
     contour_points = [down_sample_points(c, every_n) for c in contours]
 
@@ -22,18 +26,20 @@ def down_sample_points(contour, every_n=20):
 
 def get_contour_color(contour, image):
     moments = cv2.moments(contour)
+    if not sum(list(moments.values())):
+        return 50, 50, 50
     cx = int(moments["m10"] / moments["m00"])
     cy = int(moments["m01"] / moments["m00"])
 
     color = image[cy, cx]
     color = tuple(int(x) for x in color)
 
-    if color == (0, 0, 0):
+    if color == (0, 0, 0) or color == (255, 255, 255):
         mask = np.zeros(image.shape[:2], dtype='uint8')
         cv2.drawContours(mask, [contour], -1, 255, -1)
 
         masked = cv2.bitwise_and(image, image, mask=mask)
-        non_zero = np.where(masked != 0)
+        non_zero = np.where(np.any([masked != 0, masked != 255], axis=0))
         color_pool = masked[non_zero[0], non_zero[1], :]
         color = np.mean(color_pool, axis=0)
         color = tuple(int(x) for x in color)
@@ -68,11 +74,12 @@ def get_mouse_xy(event, x, y, flags, param):
         mouse_y = y
 
 
-def steer_image(image, window_name = 'Particles (press R to randomize; ESC or Q to quit)'):
+def steer_image(image, *args):
     canvas = np.zeros(image.shape, dtype='uint8') + 50
 
-    particles = image_to_particles(image)
+    particles = image_to_particles(image, canvas, every_n=20, radius=4, thresh_args=args)
 
+    window_name = 'Particles (press R to randomize; ESC or Q to quit)'
     cv2.namedWindow(window_name)
     cv2.setMouseCallback(window_name, get_mouse_xy)
 
