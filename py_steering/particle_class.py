@@ -24,13 +24,13 @@ class Particle:
         cv2.circle(canvas, tuple(location), self.radius, self.color, -1)
 
     def arrive_step(self, canvas):
-        np_dist = self.target - self.location
-        speed = np.interp(np_dist, (-max(canvas.shape), max(canvas.shape)), (-self.max_speed, self.max_speed))
+        xy_diff = self.target - self.location
+        speed = np.interp(xy_diff, (-max(canvas.shape), max(canvas.shape)), (-self.max_speed, self.max_speed))
         self.speed = speed
 
     def flee_step(self, canvas, mouse_loc):
-        np_dist = np.array(mouse_loc) - self.location
-        eu_dist = np.linalg.norm(np_dist)
-        if eu_dist <= 50:
-            speed = np.interp(np_dist, (-max(canvas.shape), max(canvas.shape)), (-self.max_speed, self.max_speed))
+        xy_diff = np.array(mouse_loc) - self.location
+        dist = np.linalg.norm(xy_diff)
+        if dist <= 50:
+            speed = np.interp(xy_diff, (-max(canvas.shape), max(canvas.shape)), (-self.max_speed, self.max_speed))
             self.speed = -10 * speed
