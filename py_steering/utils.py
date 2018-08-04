@@ -35,7 +35,7 @@ def get_contour_color(contour, image):
         masked = cv2.bitwise_and(image, image, mask=mask)
         non_zero = np.where(masked != 0)
         color_pool = masked[non_zero[0], non_zero[1], :]
-        color = color_pool[np.random.randint(0, color_pool.shape[0])]
+        color = np.mean(color_pool, axis=0)
         color = tuple(int(x) for x in color)
 
     return color
