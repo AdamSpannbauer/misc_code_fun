@@ -5,15 +5,16 @@ import cv2
 class Particle:
     def __init__(self, location, target, radius=4, color=(255, 255, 255), max_speed=75):
         self.target = np.array(target)
-        self.game_target = np.array(target)
         self.location = np.array(location, dtype='float64')
         self.speed = np.array([0, 0], dtype='float64')
         self.acceleration = np.array([0, 0], dtype='float64')
         self.max_speed = max_speed
 
         self.radius = radius
+        self.og_color = color
         self.color = color
 
+        self.game_target = np.array(target)
         self.is_hit = False
 
     def update(self, canvas, mouse_loc, target=None):
@@ -49,3 +50,4 @@ class Particle:
         if dist <= mouse_range or self.color == (50, 50, 50):
             self.is_hit = True
             self.game_target = self.target
+            self.color = self.og_color

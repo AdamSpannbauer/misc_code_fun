@@ -87,14 +87,17 @@ def steer_image(image, *args):
     game_mode = False
     game_mouse_size = 100
     blink_counter = 0
+    blink_flag = False
     while True:
         canvas_i = canvas.copy()
         if game_mode:
             blink_counter += 1
             if blink_counter >= 16:
+                blink_flag = True
                 blink_counter = 0
             elif blink_counter >= 8:
-                cv2.putText(canvas_i, 'CATCH THEM!!', (canvas.shape[1] // 2 - 200, canvas.shape[0] // 2),
+                blink_flag = False
+                cv2.putText(canvas_i, 'CATCH THEM!!', (10, canvas.shape[0] - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 2, (30, 30, 200), thickness=3)
 
             game_mouse_color = (150, 100, 30)
@@ -108,6 +111,10 @@ def steer_image(image, *args):
             for particle in particles:
                 particle.check_hit((mouse_x, mouse_y), game_mouse_size)
                 if not particle.is_hit and np.linalg.norm(particle.location - particle.game_target) <= 30:
+                    if blink_flag:
+                        particle.color = (30, 30, 200)
+                    else:
+                        particle.color = (100, 100, 150)
                     game_target = tuple(np.random.randint(1, canvas.shape[1], 1)) + \
                                   tuple(np.random.randint(1, canvas.shape[0], 1))
                     particle.game_target = np.array(game_target)
@@ -121,9 +128,20 @@ def steer_image(image, *args):
 
             if particle_hit_count == len(particles):
                 game_mode = False
+            else:
+                cv2.putText(canvas_i,
+                            'Caught {} of {}'.format(particle_hit_count, len(particles)),
+                            (10, 40),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), thickness=1)
+
+                cv2.putText(canvas_i,
+                            '(mouse over the particles)',
+                            (10, 65),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 150, 150), thickness=1)
 
         else:
             for particle in particles:
+                particle.color = particle.og_color
                 particle.is_hit = False
                 particle.update(canvas_i, (mouse_x, mouse_y))
                 particle.show(canvas_i)
